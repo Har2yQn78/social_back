@@ -24,7 +24,7 @@ type dbConfig struct {
 	addr string
 	maxOpenConns int
 	maxIdleConns int
-	maxIdletTime string
+	maxIdleTime string
 }
 
 func (app *application) mount() *chi.Mux {

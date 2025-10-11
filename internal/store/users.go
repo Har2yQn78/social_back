@@ -14,11 +14,11 @@ type User struct {
 
 }
 
-type UsersStore strut {
+type UsersStore struct {
 	db *sql.DB
 }
 
-func (s *UsersStore) Create(ctx context.Context) error {
+func (s *UsersStore) Create(ctx context.Context, user *User) error {
 	query :=
 	`
 	INSERT INTO users(username, password, email) VALUES($1, $2, $3)
@@ -30,7 +30,7 @@ func (s *UsersStore) Create(ctx context.Context) error {
 		query,
 		user.Username,
 		user.Password,
-		user.email,
+		user.Email,
 	).Scan(
 		&user.ID,
 		&user.CreatedAt,
