@@ -4,18 +4,17 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/pelletier/go-toml/query"
 	"github.com/lib/pq"
 )
 
 type Post struct {
-	ID int64 `json:"id"`
-	Content string `json:"content"`
-	Title string `json:"title"`
-	UserID int64 `json:"userid"`
-	Tags []string `json:"tags"`
-	CreatedAt string `json:"created_at"`
-	UpdatedAt string `json:"updated_at"`
+	ID        int64    `json:"id"`
+	Content   string   `json:"content"`
+	Title     string   `json:"title"`
+	UserID    int64    `json:"userid"`
+	Tags      []string `json:"tags"`
+	CreatedAt string   `json:"created_at"`
+	UpdatedAt string   `json:"updated_at"`
 }
 
 type PostsStore struct {
@@ -34,15 +33,15 @@ func (s *PostsStore) Create(ctx context.Context, post *Post) error {
 		post.Content,
 		post.Title,
 		post.UserID,
-		pq.Array(post.Tags), 
-		).Scan(
-			&post.ID,
-			&post.CreatedAt,
-			&post.UpdatedAt,
-		)
-		if err != nil {
-			return err
-		}
+		pq.Array(post.Tags),
+	).Scan(
+		&post.ID,
+		&post.CreatedAt,
+		&post.UpdatedAt,
+	)
+	if err != nil {
+		return err
+	}
 
-		return nil
+	return nil
 }
