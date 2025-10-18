@@ -108,3 +108,28 @@ func (s *UsersStore) GetByEmail(ctx context.Context, email string) (*User, error
 
 	return user, nil
 }
+
+func (s *UsersStore) GetByID(ctx context.Context, userID int64) (*User, error) {
+	query := `
+		SELECT id, username, email, password, created_at
+		FROM users
+		WHERE id = $1
+		    `
+	
+	user := &User{}
+	err := s.db.QueryRowContext(ctx, query, userID).Scan(
+		&user.ID,
+		&user.Username,
+		&user.Email,
+		&user.Password.hash,
+		&user.CreatedAt,
+	)
+	
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	return user, nil
+}
