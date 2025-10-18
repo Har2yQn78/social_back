@@ -3,6 +3,8 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/go-playground/validator/v10"
 )
 
 // writeJSON is a helper for sending JSON responses.
@@ -39,4 +41,11 @@ func (app *application) jsonResponse(w http.ResponseWriter, status int, data any
 	}
 
 	return writeJSON(w, status, &envelope{Data: data})
+}
+
+var Validate *validator.Validate // Declare a global validator instance
+
+// The init function runs exactly once when the package is first used.
+func init() {
+	Validate = validator.New(validator.WithRequiredStructEnabled())
 }

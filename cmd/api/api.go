@@ -38,8 +38,12 @@ func (app *application) mount() *chi.Mux {
 	r.Use(middleware.Recoverer)
 
 	r.Route("/v1", func(r chi.Router) {
-		r.Get("/health", app.healthCheckHandler)
-	})
+			r.Get("/health", app.healthCheckHandler)
+			// Group authentication-related routes together.
+			r.Route("/authentication", func(r chi.Router) {
+				r.Post("/user", app.registerUserHandler)
+			})
+		})
 
 	return r
 }
