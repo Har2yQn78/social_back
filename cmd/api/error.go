@@ -15,3 +15,9 @@ func (app *application) badRequestResponse(w http.ResponseWriter, r *http.Reques
 
 	writeJSONError(w, http.StatusBadRequest, err.Error())
 }
+
+func (app *application) unauthorizedErrorResponse(w http.ResponseWriter, r *http.Request, err error) {
+    app.logger.Warnw("unauthorized error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
+    
+    writeJSONError(w, http.StatusUnauthorized, "invalid credentials")
+}

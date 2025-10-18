@@ -50,35 +50,27 @@ type UsersStore struct {
 	db *sql.DB
 }
 
-func (s *UsersStore) Create(ctx context.Context, user *User) error {
-	query :=
-		`
-	INSERT INTO users(username, password, email) VALUES($1, $2, $3)
-	RETURNING id, created_at
-	`
+func (s *UsersStore) GetByEmail(ctx context.Context, email string) (*User, error) {
+	query := `
+		SELECT id, username, email, password, created_at FROM users
+		WHERE email = $1
+			`
 
-	err := s.db.QueryRowContext(
-		ctx,
-		query,
-		user.Username,
-		user.Password.hash, //use the hash
-		user.Email,
-	).Scan(
+	user := &User{}
+	err := s.db.QueryRowContext(ctx, query, email).Scan(
 		&user.ID,
+		&user.Username,
+		&user.Email,
+		&user.Password.hash, // Scan the hash into our password struct
 		&user.CreatedAt,
 	)
 	if err != nil {
-			// This is how we check for specific PostgreSQL error codes.
-			// "23505" is the code for a "unique_violation".
-			switch {
-			case err.Error() == `pq: duplicate key value violates unique constraint "users_email_key"`:
-				return ErrDuplicateEmail
-			case err.Error() == `pq: duplicate key value violates unique constraint "users_username_key"`:
-				return ErrDuplicateUsername
-			default:
-				return err
-			}
+		// If no user is found, sql.ErrNoRows is returned. We'll treat this as "not found".
+		if err == sql.ErrNoRows {
+			return nil, ErrNotFound 
 		}
+		return nil, err
+	}
 
-	return nil
+	return user, nil
 }

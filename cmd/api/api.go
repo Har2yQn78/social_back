@@ -6,6 +6,7 @@ import (
 
 	"github.com/Har2yQn78/social_back.git/internal/env"
 	"github.com/Har2yQn78/social_back.git/internal/store"
+	"github.com/Har2yQn78/social_back.git/internal/auth"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"go.uber.org/zap"
@@ -15,12 +16,24 @@ type application struct {
 	config config
 	store  store.Storage
 	logger *zap.SugaredLogger
+	authenticator auth.Authenticator 
 }
 
 type config struct {
 	addr string
 	db   dbConfig
+	auth authConfig
 }
+
+type authConfig struct {
+	token tokenConfig
+}
+
+type tokenConfig struct {
+	secret string
+	iss    string
+}
+
 
 type dbConfig struct {
 	addr         string
@@ -41,7 +54,8 @@ func (app *application) mount() *chi.Mux {
 			r.Get("/health", app.healthCheckHandler)
 			// Group authentication-related routes together.
 			r.Route("/authentication", func(r chi.Router) {
-				r.Post("/user", app.registerUserHandler)
+				r.Post("/user", app.registerUserHandler) //register router
+				r.Post("/token", app.createTokenHandler) //jwt token router
 			})
 		})
 

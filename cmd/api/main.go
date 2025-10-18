@@ -4,6 +4,7 @@ import (
 	"github.com/Har2yQn78/social_back.git/internal/db"
 	"github.com/Har2yQn78/social_back.git/internal/env"
 	"github.com/Har2yQn78/social_back.git/internal/store"
+	"github.com/Har2yQn78/social_back.git/internal/auth"
 	"go.uber.org/zap"
 )
 
@@ -16,6 +17,12 @@ func main() {
 			maxIdleConns: env.GetInt("DB_MAX_IDLE_CONNS", 30),
 			maxIdleTime:  env.GetString("DB_MAX_IDLE_TIME", "15m"),
 		},
+		auth: authConfig{
+					token: tokenConfig{
+						secret: env.GetString("AUTH_TOKEN_SECRET", "supersecretkeydontuseinprod"),
+						iss:    "gophersocial",
+					},
+				},
 	}
 
 	// Initialize the logger
@@ -35,13 +42,20 @@ func main() {
 
 	defer db.Close()
 	sugar.Info("database connection established")
-
+	
+	jwtAuthenticator := auth.NewJWTAuthenticator(
+			cfg.auth.token.secret,
+			cfg.auth.token.iss,
+			cfg.auth.token.iss,
+		)
+	
 	store := store.NewStorage(db)
 
 	app := &application{
 		config: cfg,
 		store:  store,
 		logger: sugar,
+		authenticator: jwtAuthenticator,
 	}
 
 	mux := app.mount()

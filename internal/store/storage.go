@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"database/sql"
+	"errors"
 )
 
 type Storage struct {
@@ -14,6 +15,8 @@ type Storage struct {
 	}
 
 }
+
+var ErrNotFound = errors.New("resource not found")
 
 func NewStorage(db *sql.DB) Storage {
 	return Storage {
