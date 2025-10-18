@@ -1,30 +1,32 @@
 package main
 
 import (
-	"log"
 	"net/http"
 	"time"
 
+	"github.com/Har2yQn78/social_back.git/internal/env"
 	"github.com/Har2yQn78/social_back.git/internal/store"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"go.uber.org/zap"
 )
 
 type application struct {
 	config config
 	store  store.Storage
+	logger *zap.SugaredLogger
 }
 
 type config struct {
 	addr string
-	db dbConfig
+	db   dbConfig
 }
 
 type dbConfig struct {
-	addr string
+	addr         string
 	maxOpenConns int
 	maxIdleConns int
-	maxIdleTime string
+	maxIdleTime  string
 }
 
 func (app *application) mount() *chi.Mux {
@@ -34,7 +36,6 @@ func (app *application) mount() *chi.Mux {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-	
 
 	r.Route("/v1", func(r chi.Router) {
 		r.Get("/health", app.healthCheckHandler)
@@ -53,7 +54,10 @@ func (app *application) run(mux *chi.Mux) error {
 		IdleTimeout:  time.Minute,
 	}
 
-	log.Printf("Server is runing on Port: %s", app.config.addr)
+	app.logger.Infow("server has started",
+		"addr", app.config.addr,
+		"env", env.GetString("ENV", "development"),
+	)
 
 	return srv.ListenAndServe()
 }

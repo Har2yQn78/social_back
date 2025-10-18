@@ -1,11 +1,10 @@
 package main
 
 import (
-	"log"
-
 	"github.com/Har2yQn78/social_back.git/internal/db"
 	"github.com/Har2yQn78/social_back.git/internal/env"
 	"github.com/Har2yQn78/social_back.git/internal/store"
+	"go.uber.org/zap"
 )
 
 func main() {
@@ -19,6 +18,11 @@ func main() {
 		},
 	}
 
+	// Initialize the logger
+	logger, _ := zap.NewProduction()
+	defer logger.Sync()
+	sugar := logger.Sugar()
+
 	db, err := db.New(
 		cfg.db.addr,
 		cfg.db.maxOpenConns,
@@ -26,20 +30,23 @@ func main() {
 		cfg.db.maxIdleTime,
 	)
 	if err != nil {
-		log.Panic(err)
+		sugar.Fatal(err)
 	}
 
 	defer db.Close()
-	log.Println("database connection established")
+	sugar.Info("database connection established")
 
 	store := store.NewStorage(db)
 
 	app := &application{
 		config: cfg,
 		store:  store,
+		logger: sugar,
 	}
 
 	mux := app.mount()
 
-	log.Fatal(app.run(mux))
+	if err := app.run(mux); err != nil {
+		sugar.Fatal(err)
+	}
 }

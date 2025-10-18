@@ -5,13 +5,20 @@ import (
 	"net/http"
 )
 
+// writeJSON is a helper for sending JSON responses.
+func writeJSON(w http.ResponseWriter, status int, data any) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	return json.NewEncoder(w).Encode(data)
+}
+
 // readJSON is a helper for decoding JSON from a request body.
-func writeJSON(w http.ResponseWriter, r *http.Request, data any) error {
-	max_Bytes := 1_048_578 //1MB
-	r.Body = http.MaxBytesReader(w, r.Body, int64(max_Bytes))
+func readJSON(w http.ResponseWriter, r *http.Request, data any) error {
+	maxBytes := 1_048_578 // 1MB
+	r.Body = http.MaxBytesReader(w, r.Body, int64(maxBytes))
 
 	decoder := json.NewDecoder(r.Body)
-	decoder.DisallowUnknownFields()
+	decoder.DisallowUnknownFields() // Prevent decoding if the JSON includes unknown fields.
 
 	return decoder.Decode(data)
 }
