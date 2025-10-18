@@ -23,38 +23,38 @@ type PostsStore struct {
 }
 
 func (s *PostsStore) Create(ctx context.Context, post *Post) error {
-	query := `
-	INSERT INTO posts (content, title, user_id, tags)
-	VALUES ($1, $2, $3, $4) RETURNING id, created_at, updated_at
-	`
+    query := `
+        INSERT INTO posts (content, title, user_id, tags)
+        VALUES ($1, $2, $3, $4) RETURNING id, created_at, updated_at
+    `
+    err := s.db.QueryRowContext(
+        ctx,
+        query,
+        post.Content,
+        post.Title,
+        post.UserID,
+        pq.Array(post.Tags),
+    ).Scan(
+        &post.ID,
+        &post.CreatedAt,
+        &post.UpdatedAt,
+    )
+    if err != nil {
+        return err
+    }
 
-	err := s.db.QueryRowContext(
-		ctx,
-		query,
-		post.Content,
-		post.Title,
-		post.UserID,
-		pq.Array(post.Tags),
-	).Scan(
-		&post.ID,
-		&post.CreatedAt,
-		&post.UpdatedAt,
-	)
-	if err != nil {
-		return err
-	}
-
-	return nil
+    return nil
 }
+
 
 func (s *PostsStore) GetByID(ctx context.Context, id int64) (*Post, error) {
 	query := `
-	SELECT id, user_id, title, content, created_at, tags
-	FROM posts
-	WHERE id = $1
+		SELECT id, user_id, title, content, created_at, updated_at, tags
+		FROM posts
+		WHERE id = $1
 	`
+
 	var post Post
-	
 	var tags pq.StringArray
 	err := s.db.QueryRowContext(ctx, query, id).Scan(
 		&post.ID,
@@ -62,6 +62,7 @@ func (s *PostsStore) GetByID(ctx context.Context, id int64) (*Post, error) {
 		&post.Title,
 		&post.Content,
 		&post.CreatedAt,
+		&post.UpdatedAt, 
 		&tags,
 	)
 	if err != nil {
