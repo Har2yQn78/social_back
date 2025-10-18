@@ -61,18 +61,8 @@ func (app *application) mount() *chi.Mux {
 			r.Group(func(r chi.Router) {
 				// Apply our new authentication middleware to this group.
 				r.Use(app.AuthTokenMiddleware)
-
-				// Add a test route inside the protected group.
-				r.Get("/test-auth", func(w http.ResponseWriter, r *http.Request) {
-					// Use our helper to get the authenticated user.
-					user := getUserFromContext(r)
-
-					// Send a response back to prove it worked.
-					app.jsonResponse(w, http.StatusOK, map[string]string{
-						"message": "you are authenticated",
-						"username": user.Username,
-					})
-				})
+				r.Post("/posts", app.createPostHandler)
+				r.Get("/posts/{postID}", app.getPostHandler)
 			})
 		})
 
