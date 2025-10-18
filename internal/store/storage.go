@@ -12,6 +12,7 @@ type Storage struct {
 	}
 	Users interface {
 		Create(context.Context, *User) error
+		GetByEmail(context.Context, string) (*User, error)
 	}
 
 }
