@@ -11,6 +11,7 @@ import (
 	"go.uber.org/zap"
 	"github.com/Har2yQn78/social_back.git/internal/store/cache"
 	"github.com/Har2yQn78/social_back.git/internal/ratelimiter"
+	"github.com/Har2yQn78/social_back.git/internal/mailer"
 )
 
 type application struct {
@@ -20,6 +21,7 @@ type application struct {
 	authenticator auth.Authenticator
 	cacheStorage  *cache.UserStore
 	rateLimiter   ratelimiter.Limiter
+	mailer 		  mailer.Mailer
 }
 
 type config struct {
@@ -28,7 +30,12 @@ type config struct {
 	auth        authConfig
 	redisCfg    redisConfig
 	rateLimiter ratelimiter.Config
+	mailer      mailerConfig
 }
+
+
+type mailerConfig struct { host string; port int; username, password, sender string }
+
 
 type redisConfig struct {
     addr string
@@ -65,6 +72,8 @@ func (app *application) mount() *chi.Mux {
 
 	r.Route("/v1", func(r chi.Router) {
 		r.Get("/health", app.healthCheckHandler)
+		
+		r.Put("/users/activate/{token}", app.activateUserHandler)
 
 		r.Route("/authentication", func(r chi.Router) {
 			r.Post("/user", app.registerUserHandler)

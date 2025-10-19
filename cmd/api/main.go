@@ -10,6 +10,7 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/Har2yQn78/social_back.git/internal/ratelimiter"
 	"time"
+	"github.com/Har2yQn78/social_back.git/internal/mailer"
 )
 
 
@@ -40,6 +41,13 @@ func main() {
                     TimeFrame:            time.Second * 5,
                     Enabled:              env.GetBool("RATE_LIMITER_ENABLED", true),
                 },
+        mailer: mailerConfig{
+                            host:     env.GetString("SMTP_HOST", "live.smtp.mailtrap.io"),
+                            port:     env.GetInt("SMTP_PORT", 587),
+                            username: env.GetString("SMTP_USERNAME", "api"),
+                            password: env.GetString("SMTP_PASSWORD", "<YOUR_MAILTRAP_PASSWORD>"),
+                            sender:   "GOSocial_Harry <no-reply@gophersocial.net>",
+                        },
 	}
 
 	// Initialize the logger
@@ -88,6 +96,7 @@ func main() {
 		authenticator:  jwtAuthenticator,
 		cacheStorage:   cacheStorage,
 		rateLimiter: 	rateLimiter,
+		mailer: 		mailer.New(cfg.mailer.host, cfg.mailer.port, cfg.mailer.username, cfg.mailer.password, cfg.mailer.sender),
 	}
 
 	mux := app.mount()

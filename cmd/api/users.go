@@ -72,3 +72,17 @@ func (app *application) getUserFeedHandler(w http.ResponseWriter, r *http.Reques
         app.internalServerError(w, r, err)
     }
 }
+
+func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Request) {
+    token := chi.URLParam(r, "token")
+    err := app.store.Users.Activate(r.Context(), token)
+    if err != nil {
+        if errors.Is(err, store.ErrNotFound) {
+            app.notFoundResponse(w, r, err)
+            return
+        }
+        app.internalServerError(w, r, err)
+        return
+    }
+    app.jsonResponse(w, http.StatusOK, map[string]string{"message": "user activated successfully"})
+}

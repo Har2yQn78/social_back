@@ -6,6 +6,8 @@ import (
 
 	"github.com/Har2yQn78/social_back.git/internal/store"
 	"github.com/golang-jwt/jwt/v5" 
+	"github.com/google/uuid"
+	"errors"
 )
 
 // RegisterUserPayload defines the expected JSON structure for a registration request.
@@ -18,52 +20,42 @@ type RegisterUserPayload struct {
 
 // registerUserHandler is our HTTP handler for user creation.
 func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Request) {
-	var payload RegisterUserPayload
-	// 1. Decode the incoming JSON from the request body.
-	if err := readJSON(w, r, &payload); err != nil {
-		app.badRequestResponse(w, r, err)
-		return
-	}
+    var payload RegisterUserPayload
+    if err := readJSON(w, r, &payload); err != nil { app.badRequestResponse(w, r, err); return }
+    if err := Validate.Struct(payload); err != nil { app.badRequestResponse(w, r, err); return }
 
-	// 2. Validate the decoded payload using the rules in our struct tags.
-	if err := Validate.Struct(payload); err != nil {
-		app.badRequestResponse(w, r, err)
-		return
-	}
+    user := &store.User{Username: payload.Username, Email: payload.Email}
+    if err := user.Password.Set(payload.Password); err != nil { app.internalServerError(w, r, err); return }
 
-	// 3. Create a new user model.
-	user := &store.User{
-		Username: payload.Username,
-		Email:    payload.Email,
-	}
+    plainToken := uuid.New().String()
 
-	// 4. Hash the password securely.
-	if err := user.Password.Set(payload.Password); err != nil {
-		app.internalServerError(w, r, err)
-		return
-	}
+    err := app.store.Users.CreateAndInvite(r.Context(), user, plainToken, time.Hour*24*3)
+    if err != nil {
+        switch {
+        case errors.Is(err, store.ErrDuplicateEmail), errors.Is(err, store.ErrDuplicateUsername):
+            app.badRequestResponse(w, r, err)
+        default:
+            app.internalServerError(w, r, err)
+        }
+        return
+    }
 
-	// 5. Save the new user to the database.
-	ctx := r.Context()
-	err := app.store.Users.Create(ctx, user)
-	if err != nil {
-		switch err {
-		// Check for our custom errors and respond appropriately.
-		case store.ErrDuplicateEmail:
-			app.badRequestResponse(w, r, err)
-		case store.ErrDuplicateUsername:
-			app.badRequestResponse(w, r, err)
-		default:
-			// For any other error, send a generic 500.
-			app.internalServerError(w, r, err)
-		}
-		return
-	}
+    go func() {
+        defer func() {
+            if r := recover(); r != nil {
+                app.logger.Errorw("recovered in send email goroutine", "panic", r)
+            }
+        }()
+        data := map[string]any{
+            "activationURL": "http://localhost:8080/v1/users/activate/" + plainToken,
+            "username":      user.Username,
+        }
+        if err := app.mailer.Send(user.Email, "user_welcome.tmpl", data); err != nil {
+            app.logger.Errorw("failed to send welcome email", "error", err)
+        }
+    }()
 
-	// 6. Send a success response back to the client.
-	if err := app.jsonResponse(w, http.StatusCreated, user); err != nil {
-		app.internalServerError(w, r, err)
-	}
+    app.jsonResponse(w, http.StatusAccepted, map[string]string{"message": "please check your email to activate your account"})
 }
 
 // CreateUserTokenPayload defines the JSON we expect for a login request.

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"time"
 )
 
 type Storage struct {
@@ -15,9 +16,10 @@ type Storage struct {
 		GetUserFeed(context.Context, int64) ([]Post, error)
 	}
 	Users interface {
-		Create(context.Context, *User) error
+		CreateAndInvite(ctx context.Context, user *User, token string, exp time.Duration) error
 		GetByEmail(context.Context, string) (*User, error)
 		GetByID(context.Context, int64) (*User, error) 
+		Activate(context.Context, string) error
 	}
 	Followers interface {
         Follow(ctx context.Context, followedID, followerID int64) error
@@ -36,4 +38,14 @@ func NewStorage(db *sql.DB) Storage {
 		Users: 	   &UsersStore{db},
 		Followers: &FollowersStore{db},
 	}
+}
+
+func withTx(db *sql.DB, ctx context.Context, fn func(*sql.Tx) error) error {
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil { return err }
+	if err := fn(tx); err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+	return tx.Commit()
 }

@@ -1,0 +1,11 @@
+{{define "subject"}}Welcome to GOSocial(created by Harry)!{{end}}
+
+{{define "body"}}
+<!doctype html>
+<html><body>
+  <p>Hi {{.username}},</p>
+  <p>Thanks for signing up! To activate your account, please click the link below:</p>
+  <p><a href="{{.activationURL}}">Activate My Account</a></p>
+  <p>This link will expire in 3 days.</p>
+</body></html>
+{{end}}
