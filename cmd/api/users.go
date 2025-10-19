@@ -59,3 +59,16 @@ func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Reque
 
 	app.jsonResponse(w, http.StatusOK, map[string]string{"message": "user unfollowed"})
 }
+
+func (app *application) getUserFeedHandler(w http.ResponseWriter, r *http.Request) {
+    user := getUserFromContext(r)
+    feed, err := app.store.Posts.GetUserFeed(r.Context(), user.ID)
+    if err != nil {
+        app.internalServerError(w, r, err)
+        return
+    }
+    
+    if err := app.jsonResponse(w, http.StatusOK, feed); err != nil {
+        app.internalServerError(w, r, err)
+    }
+}
