@@ -18,10 +18,44 @@ const userCtxKey userKey = "user"
 type postKey string
 const postCtxKey postKey = "post"
 
+func (app *application) getUser(ctx context.Context, userID int64) (*store.User, error) {
+	// If caching is disabled, just go straight to the database.
+	if app.config.redisCfg.enabled == false {
+		return app.store.Users.GetByID(ctx, userID)
+	}
+
+	// 1. Try to get the user from the cache.
+	user, err := app.cacheStorage.Get(ctx, userID)
+	if err != nil {
+		return nil, err // A real error occurred with Redis.
+	}
+
+	// 2. If we have a cache hit, return the user.
+	if user != nil {
+		app.logger.Info("cache hit for user: ", userID)
+		return user, nil
+	}
+
+	app.logger.Info("cache miss for user: ", userID)
+	// 3. On a cache miss, get the user from the database.
+	user, err = app.store.Users.GetByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// 4. Store the fresh user data in the cache for next time.
+	if err := app.cacheStorage.Set(ctx, user); err != nil {
+		// We log the caching error but don't fail the request.
+		// The user should still get their data even if caching fails.
+		app.logger.Errorw("failed to cache user", "error", err)
+	}
+
+	return user, nil
+}
+
 
 func (app *application) AuthTokenMiddleware(next http.Handler) http.Handler {
-	// http.HandlerFunc is an adapter that lets us use regular functions as HTTP handlers.
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// 1. Get the Authorization header.
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
@@ -60,12 +94,12 @@ func (app *application) AuthTokenMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// 6. Fetch the user from the database. This ensures the user still exists and is active.
-		user, err := app.store.Users.GetByID(r.Context(), userID)
-		if err != nil {
-			app.unauthorizedErrorResponse(w, r, err)
-			return
-		}
+		// 6. Fetch the user from the database USING OUR NEW HELPER.
+        user, err := app.getUser(r.Context(), userID) // <-- THIS IS THE CHANGE
+        if err != nil {
+            app.unauthorizedErrorResponse(w, r, err)
+            return
+        }
 
 		// 7. Add the user to the request context.
 		ctx := context.WithValue(r.Context(), userCtxKey, user)
@@ -99,3 +133,5 @@ func (app *application) postsContextMiddleware(next http.Handler) http.Handler {
         next.ServeHTTP(w, r.WithContext(ctx))
     })
 }
+
+

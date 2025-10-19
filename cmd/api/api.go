@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"go.uber.org/zap"
+	"github.com/Har2yQn78/social_back.git/internal/store/cache"
 )
 
 type application struct {
@@ -16,12 +17,21 @@ type application struct {
 	store         store.Storage
 	logger        *zap.SugaredLogger
 	authenticator auth.Authenticator
+	cacheStorage  *cache.UserStore
 }
 
 type config struct {
-	addr string
-	db   dbConfig
-	auth authConfig
+	addr        string
+	db          dbConfig
+	auth        authConfig
+	redisCfg redisConfig
+}
+
+type redisConfig struct {
+    addr string
+    pw string
+    db int
+    enabled bool
 }
 
 type dbConfig struct {
