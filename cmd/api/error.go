@@ -26,3 +26,8 @@ func (app *application) notFoundResponse(w http.ResponseWriter, r *http.Request,
 	app.logger.Warnw("not found error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
 	writeJSONError(w, http.StatusNotFound, "the requested resource was not found")
 }
+
+func (app *application) forbiddenResponse(w http.ResponseWriter, r *http.Request) {
+    app.logger.Warnw("forbidden", "method", r.Method, "path", r.URL.Path)
+    writeJSONError(w, http.StatusForbidden, "you do not have permission to access this resource")
+}

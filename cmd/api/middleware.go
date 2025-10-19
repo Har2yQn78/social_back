@@ -6,12 +6,17 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"errors"
 
+	"github.com/Har2yQn78/social_back.git/internal/store"
+	"github.com/go-chi/chi/v5"
 	"github.com/golang-jwt/jwt/v5"
 )
 
 type userKey string
 const userCtxKey userKey = "user"
+type postKey string
+const postCtxKey postKey = "post"
 
 
 func (app *application) AuthTokenMiddleware(next http.Handler) http.Handler {
@@ -68,4 +73,29 @@ func (app *application) AuthTokenMiddleware(next http.Handler) http.Handler {
 		// 8. Call the next handler in the chain, passing the modified context.
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+func (app *application) postsContextMiddleware(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        idParam := chi.URLParam(r, "postID")
+        id, err := strconv.ParseInt(idParam, 10, 64)
+        if err != nil {
+            app.badRequestResponse(w, r, errors.New("invalid post ID"))
+            return
+        }
+
+        post, err := app.store.Posts.GetByID(r.Context(), id)
+        if err != nil {
+            if errors.Is(err, store.ErrNotFound) {
+                app.notFoundResponse(w, r, err)
+                return
+            }
+            app.internalServerError(w, r, err)
+            return
+        }
+
+        // Put the post in the context.
+        ctx := context.WithValue(r.Context(), postCtxKey, post)
+        next.ServeHTTP(w, r.WithContext(ctx))
+    })
 }

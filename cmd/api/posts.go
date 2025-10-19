@@ -1,12 +1,9 @@
 package main
 
 import (
-	"errors"
 	"net/http"
-	"strconv"
 	
 	"github.com/Har2yQn78/social_back.git/internal/store"
-	"github.com/go-chi/chi/v5"
 )
 
 type CreatePostPayload struct {
@@ -14,6 +11,16 @@ type CreatePostPayload struct {
 	Content string   `json:"content" validate:"required,max=1000"`
 	Tags    []string `json:"tags"`
 }
+
+
+func getPostFromCtx(r *http.Request) *store.Post {
+    post, ok := r.Context().Value(postCtxKey).(*store.Post)
+    if !ok {
+        panic("post not found in context")
+    }
+    return post
+}
+
 
 func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request) {
 	var payload CreatePostPayload
@@ -27,7 +34,6 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// Get the authenticated user from the context.
 	user := getUserFromContext(r)
 
 	post := &store.Post{
@@ -48,24 +54,58 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 }
 
 func (app *application) getPostHandler(w http.ResponseWriter, r *http.Request) {
-	idParam := chi.URLParam(r, "postID")
-	id, err := strconv.ParseInt(idParam, 10, 64)
-	if err != nil {
-		app.badRequestResponse(w, r, errors.New("invalid post ID"))
-		return
-	}
+    post := getPostFromCtx(r)
+    if err := app.jsonResponse(w, http.StatusOK, post); err != nil {
+        app.internalServerError(w, r, err)
+    }
+}
 
-	post, err := app.store.Posts.GetByID(r.Context(), id)
-	if err != nil {
-		if errors.Is(err, store.ErrNotFound) {
-			app.notFoundResponse(w, r, err)
-			return
-		}
-		app.internalServerError(w, r, err)
-		return
-	}
+type UpdatePostPayload struct {
+    Title   *string  `json:"title" validate:"omitempty,max=100"`
+    Content *string  `json:"content" validate:"omitempty,max=1000"`
+    Tags    []string `json:"tags"`
+}
 
-	if err := app.jsonResponse(w, http.StatusOK, post); err != nil {
-		app.internalServerError(w, r, err)
-	}
+func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request) {
+    post := getPostFromCtx(r)
+    user := getUserFromContext(r)
+
+    // *** AUTHORIZATION CHECK ***
+    if post.UserID != user.ID {
+        app.forbiddenResponse(w, r)
+        return
+    }
+
+    var payload UpdatePostPayload
+    if err := readJSON(w, r, &payload); err != nil { app.badRequestResponse(w, r, err); return }
+    if err := Validate.Struct(payload); err != nil { app.badRequestResponse(w, r, err); return }
+
+    if payload.Title != nil { post.Title = *payload.Title }
+    if payload.Content != nil { post.Content = *payload.Content }
+    if payload.Tags != nil { post.Tags = payload.Tags }
+
+    if err := app.store.Posts.Update(r.Context(), post); err != nil {
+        app.internalServerError(w, r, err)
+        return
+    }
+    if err := app.jsonResponse(w, http.StatusOK, post); err != nil {
+        app.internalServerError(w, r, err)
+    }
+}
+
+func (app *application) deletePostHandler(w http.ResponseWriter, r *http.Request) {
+    post := getPostFromCtx(r)
+    user := getUserFromContext(r)
+
+    // *** AUTHORIZATION CHECK ***
+    if post.UserID != user.ID {
+        app.forbiddenResponse(w, r)
+        return
+    }
+
+    if err := app.store.Posts.Delete(r.Context(), post.ID); err != nil {
+        app.internalServerError(w, r, err)
+        return
+    }
+    w.WriteHeader(http.StatusNoContent)
 }
