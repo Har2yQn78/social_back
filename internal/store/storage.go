@@ -13,7 +13,7 @@ type Storage struct {
 		GetByID(context.Context, int64)	(*Post, error)
 		Update(context.Context, *Post) error
 		Delete(context.Context, int64) error
-		GetUserFeed(context.Context, int64) ([]Post, error)
+		GetUserFeed(context.Context, int64, PaginatedFeedQuery) ([]Post, error)
 	}
 	Users interface {
 		CreateAndInvite(ctx context.Context, user *User, token string, exp time.Duration) error
