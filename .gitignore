@@ -59,3 +59,156 @@ coverage.out
 # Misc
 *.orig
 *.bak
+
+
+# =====================================
+# Node / React General
+# =====================================
+
+# Dependencies
+/node_modules/
+
+# Build output
+/dist/
+/build/
+/out/
+
+# Local environment files
+.env
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+bun-debug.log*
+*.log
+
+# Cache
+.cache/
+.vite/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+*.eslintcache
+*.stylelintcache
+.storybook-out/
+.parcel-cache/
+.tmp/
+temp/
+.tmp-*
+
+# =====================================
+# OS / Editor Files
+# =====================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# IDEs
+.idea/
+.vscode/
+*.sw?
+*.swo
+*.swn
+*.bak
+*.orig
+
+# =====================================
+# Testing
+# =====================================
+/coverage/
+*.lcov
+
+# Jest snapshots
+*.snap
+
+# Cypress
+cypress/screenshots/
+cypress/videos/
+
+# Playwright
+test-results/
+playwright-report/
+blob-report/
+
+# =====================================
+# Package Managers
+# =====================================
+# Yarn
+.yarn/*
+!.yarn/releases
+!.yarn/plugins
+!.yarn/sdks
+!.yarn/versions
+.pnp.*
+.yarnrc.yml
+
+# npm
+package-lock.json
+
+# pnpm
+pnpm-lock.yaml
+
+# bun
+bun.lockb
+
+# =====================================
+# Miscellaneous
+# =====================================
+# Local development
+*.local
+*.dev
+*.test
+
+# Storybook
+storybook-static/
+
+# Optional production deploys
+.vercel/
+.netlify/
+firebase-debug.log
+firebase.json
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+
+# =====================================
+# Docker
+# =====================================
+.docker/
+docker-compose.override.yml
+
+# =====================================
+# Others
+# =====================================
+# VSCode project settings
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+
+
+# TypeScript
+*.tsbuildinfo
+
+
