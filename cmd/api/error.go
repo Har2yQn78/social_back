@@ -31,3 +31,8 @@ func (app *application) forbiddenResponse(w http.ResponseWriter, r *http.Request
     app.logger.Warnw("forbidden", "method", r.Method, "path", r.URL.Path)
     writeJSONError(w, http.StatusForbidden, "you do not have permission to access this resource")
 }
+
+func (app *application) conflictResponse(w http.ResponseWriter, r *http.Request, err error) {
+	app.logger.Warnw("conflict response", "method", r.Method, "path", r.URL.Path, "error", err.Error())
+	writeJSONError(w, http.StatusConflict, "you are already following this user")
+}

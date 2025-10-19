@@ -18,14 +18,21 @@ type Storage struct {
 		GetByEmail(context.Context, string) (*User, error)
 		GetByID(context.Context, int64) (*User, error) 
 	}
-
+	Followers interface {
+        Follow(ctx context.Context, followedID, followerID int64) error
+        Unfollow(ctx context.Context, followedID, followerID int64) error
+    }
 }
 
-var ErrNotFound = errors.New("resource not found")
+var (
+    ErrNotFound = errors.New("resource not found")
+    ErrConflict = errors.New("resource already exists")
+)
 
 func NewStorage(db *sql.DB) Storage {
 	return Storage {
-		Posts: &PostsStore{db},
-		Users: &UsersStore{db},
+		Posts:     &PostsStore{db},
+		Users: 	   &UsersStore{db},
+		Followers: &FollowersStore{db},
 	}
 }

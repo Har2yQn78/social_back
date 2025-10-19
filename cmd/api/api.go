@@ -66,6 +66,10 @@ func (app *application) mount() *chi.Mux {
 				r.Patch("/", app.updatePostHandler)
 				r.Delete("/", app.deletePostHandler)
 			})
+			r.Route("/users/{userID}", func(r chi.Router) {
+            r.Put("/follow", app.followUserHandler)
+            r.Put("/unfollow", app.unfollowUserHandler)
+        	})
 		})
 	})
 
