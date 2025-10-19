@@ -12,6 +12,9 @@ type CreatePostPayload struct {
 	Tags    []string `json:"tags"`
 }
 
+type CreateCommentPayload struct {
+    Content string `json:"content" validate:"required,max:1000"`
+}
 
 func getPostFromCtx(r *http.Request) *store.Post {
     post, ok := r.Context().Value(postCtxKey).(*store.Post)
@@ -53,8 +56,40 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 	}
 }
 
+
+func (app *application) createCommentHandler(w http.ResponseWriter, r *http.Request) {
+    post := getPostFromCtx(r)
+    user := getUserFromContext(r)
+
+    var payload CreateCommentPayload
+    if err := readJSON(w, r, &payload); err != nil { app.badRequestResponse(w, r, err); return }
+    if err := Validate.Struct(payload); err != nil { app.badRequestResponse(w, r, err); return }
+
+    comment := &store.Comment{
+        PostID:  post.ID,
+        UserID:  user.ID,
+        Content: payload.Content,
+    }
+
+    if err := app.store.Comments.Create(r.Context(), comment); err != nil {
+        app.internalServerError(w, r, err); return
+    }
+    if err := app.jsonResponse(w, http.StatusCreated, comment); err != nil {
+        app.internalServerError(w, r, err)
+    }
+}
+
+
 func (app *application) getPostHandler(w http.ResponseWriter, r *http.Request) {
     post := getPostFromCtx(r)
+    comments, err := app.store.Comments.GetByPostID(r.Context(), post.ID)
+    if err != nil {
+        app.internalServerError(w, r, err)
+        return
+    }
+    
+    post.Comments = comments 
+
     if err := app.jsonResponse(w, http.StatusOK, post); err != nil {
         app.internalServerError(w, r, err)
     }
