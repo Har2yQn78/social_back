@@ -135,3 +135,16 @@ func (app *application) postsContextMiddleware(next http.Handler) http.Handler {
 }
 
 
+func (app *application) RateLimiterMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if app.config.rateLimiter.Enabled {
+			ip := r.RemoteAddr
+
+			if allow, retryAfter := app.rateLimiter.Allow(ip); !allow {
+				app.rateLimitExceededResponse(w, r, retryAfter.String())
+				return
+			}
+		}
+		next.ServeHTTP(w, r)
+	})
+}

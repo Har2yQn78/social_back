@@ -10,6 +10,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"go.uber.org/zap"
 	"github.com/Har2yQn78/social_back.git/internal/store/cache"
+	"github.com/Har2yQn78/social_back.git/internal/ratelimiter"
 )
 
 type application struct {
@@ -18,13 +19,15 @@ type application struct {
 	logger        *zap.SugaredLogger
 	authenticator auth.Authenticator
 	cacheStorage  *cache.UserStore
+	rateLimiter   ratelimiter.Limiter
 }
 
 type config struct {
 	addr        string
 	db          dbConfig
 	auth        authConfig
-	redisCfg redisConfig
+	redisCfg    redisConfig
+	rateLimiter ratelimiter.Config
 }
 
 type redisConfig struct {
@@ -52,6 +55,8 @@ type tokenConfig struct {
 
 func (app *application) mount() *chi.Mux {
 	r := chi.NewRouter()
+	
+	r.Use(app.RateLimiterMiddleware)
 
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)

@@ -8,6 +8,8 @@ import (
 	"go.uber.org/zap"
 	"github.com/Har2yQn78/social_back.git/internal/store/cache"
 	"github.com/go-redis/redis/v8"
+	"github.com/Har2yQn78/social_back.git/internal/ratelimiter"
+	"time"
 )
 
 
@@ -33,6 +35,11 @@ func main() {
             db:      env.GetInt("REDIS_DB", 0),
             enabled: env.GetBool("REDIS_ENABLED", true),
         },
+        rateLimiter: ratelimiter.Config{
+                    RequestsPerTimeFrame: env.GetInt("RATELIMITER_REQUESTS_COUNT", 20),
+                    TimeFrame:            time.Second * 5,
+                    Enabled:              env.GetBool("RATE_LIMITER_ENABLED", true),
+                },
 	}
 
 	// Initialize the logger
@@ -61,6 +68,11 @@ func main() {
 	
 	store := store.NewStorage(db)
 	
+	rateLimiter := ratelimiter.NewFixedWindowLimiter(
+        cfg.rateLimiter.RequestsPerTimeFrame,
+        cfg.rateLimiter.TimeFrame,
+    )
+	
 	var rdb *redis.Client
     if cfg.redisCfg.enabled {
         rdb = cache.NewRedisClient(cfg.redisCfg.addr, cfg.redisCfg.pw, cfg.redisCfg.db)
@@ -70,11 +82,12 @@ func main() {
     cacheStorage := cache.NewUserStore(rdb)
 
 	app := &application{
-		config: cfg,
-		store:  store,
-		logger: sugar,
-		authenticator: jwtAuthenticator,
-		cacheStorage: cacheStorage,
+		config: 		cfg,
+		store:  		store,
+		logger: 		sugar,
+		authenticator:  jwtAuthenticator,
+		cacheStorage:   cacheStorage,
+		rateLimiter: 	rateLimiter,
 	}
 
 	mux := app.mount()
