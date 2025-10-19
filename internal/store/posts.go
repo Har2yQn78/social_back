@@ -120,40 +120,37 @@ func (s *PostsStore) Delete(ctx context.Context, postID int64) error {
     return nil
 }
 
-func (s *PostsStore) GetUserFeed(ctx context.Context, userID int64) ([]Post, error) {
-	query := `
-	SELECT p.id, p.user_id, p.title, p.content, p.created_at, p.updated_at, p.tags, p.version
-	FROM posts p
-	LEFT JOIN followers f ON f.user_id = p.user_id
-	WHERE f.follower_id = $1 OR p.user_id = $1
-	GROUP BY p.id
-	ORDER BY p.created_at DESC
-	LIMIT 20
-			`
-	rows, err := s.db.QueryContext(ctx, query, userID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	
-	var feed []Post
-    for rows.Next() {
-        var p Post
-        var tags pq.StringArray
-        err := rows.Scan(
-            &p.ID, &p.UserID, &p.Title, &p.Content,
-            &p.CreatedAt, &p.UpdatedAt, &tags, &p.Version,
-        )
-        if err != nil {
-            return nil, err
-        }
-        p.Tags = tags
-        feed = append(feed, p)
-    }
-    
-    if err = rows.Err(); err != nil {
-           return nil, err
-       }
-   
-       return feed, nil
-}
+func (s *PostsStore) GetUserFeed(ctx context.Context, userID int64, fq PaginatedFeedQuery) ([]Post, error) {
+    query := `
+        SELECT p.id, p.user_id, p.title, p.content, p.created_at, p.updated_at, p.tags, p.version
+        FROM posts p
+        LEFT JOIN followers f ON f.user_id = p.user_id
+        WHERE
+            (f.follower_id = $1 OR p.user_id = $1) AND
+            (p.title ILIKE '%' || $4 || '%' OR p.content ILIKE '%' || $4 || '%') AND
+            (p.tags @> $5 OR array_length($5, 1) IS NULL)
+        GROUP BY p.id
+        ORDER BY p.created_at ` + fq.Sort + `
+        LIMIT $2 OFFSET $3
+        	`
+         
+         rows, err := s.db.QueryContext(ctx, query, userID, fq.Limit, fq.Offset, fq.Search, pq.Array(fq.Tags))
+             if err != nil {
+                 return nil, err
+             }
+             defer rows.Close()
+         
+             var feed []Post
+             for rows.Next() {
+                 var p Post
+                 var tags pq.StringArray
+                 err := rows.Scan(
+                     &p.ID, &p.UserID, &p.Title, &p.Content,
+                     &p.CreatedAt, &p.UpdatedAt, &tags, &p.Version,
+                 )
+                 if err != nil { return nil, err }
+                 p.Tags = tags
+                 feed = append(feed, p)
+             }
+             return feed, rows.Err()
+         }
