@@ -15,23 +15,70 @@ import FollowingPage from './pages/FollowingPage'
 import SettingsPage from './pages/SettingsPage'
 import NotFoundPage from './pages/NotFoundPage'
 
+// auth
+import ProtectedRoute from './components/auth/ProtectedRoute'
+
 export const router = createBrowserRouter([
   {
     path: '/',
     element: <App />,
     children: [
-      { index: true, element: <FeedPage /> },
+      {
+        index: true,
+        element: (
+          <ProtectedRoute>
+            <FeedPage />
+          </ProtectedRoute>
+        )
+      },
+
       { path: 'register', element: <RegisterPage /> },
       { path: 'activate/:token', element: <ActivatePage /> },
       { path: 'login', element: <LoginPage /> },
-      { path: 'feed', element: <FeedPage /> },
-      { path: 'post/create', element: <PostCreatePage /> },
+
+      {
+        path: 'feed',
+        element: (
+          <ProtectedRoute>
+            <FeedPage />
+          </ProtectedRoute>
+        )
+      },
+      // create/edit require auth
+      {
+        path: 'post/create',
+        element: (
+          <ProtectedRoute>
+            <PostCreatePage />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: 'post/:id/edit',
+        element: (
+          <ProtectedRoute>
+            <PostEditPage />
+          </ProtectedRoute>
+        )
+      },
+
+      // reading a post can be public
       { path: 'post/:id', element: <PostDetailPage /> },
-      { path: 'post/:id/edit', element: <PostEditPage /> },
+
+      // user profiles can be public
       { path: 'user/:id', element: <UserProfilePage /> },
       { path: 'user/:id/followers', element: <FollowersPage /> },
       { path: 'user/:id/following', element: <FollowingPage /> },
-      { path: 'settings', element: <SettingsPage /> }
+
+      // settings require auth
+      {
+        path: 'settings',
+        element: (
+          <ProtectedRoute>
+            <SettingsPage />
+          </ProtectedRoute>
+        )
+      }
     ],
     errorElement: <NotFoundPage />
   }
