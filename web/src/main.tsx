@@ -1,23 +1,44 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import App from './App.tsx'
-import './index.css'
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
-import { ConfirmationPage } from './ConfirmationPage.tsx'
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import App from './App.tsx';
+import './index.css';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { ConfirmationPage } from './ConfirmationPage.tsx';
+import { Layout } from './Layout.tsx';
+import { RegisterPage } from './RegisterPage.tsx';
+import { LoginPage } from './LoginPage.tsx'; 
+import { AuthProvider } from './AuthContext.tsx';
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <App />
+    element: <Layout />,
+    children: [
+      {
+        index: true,
+        element: <App />,
+      },
+      {
+        path: "/confirm/:token",
+        element: <ConfirmationPage />,
+      },
+      {
+        path: "/register",
+        element: <RegisterPage />,
+      },
+      {
+        path: "/login",
+        element: <LoginPage />,
+      },
+    ],
   },
-  {
-    path: "/confirm/:token",
-    element: <ConfirmationPage />
-  },
-])
+]);
+
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
   </StrictMode>,
-)
+);

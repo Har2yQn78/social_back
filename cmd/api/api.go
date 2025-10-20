@@ -12,6 +12,7 @@ import (
 	"github.com/Har2yQn78/social_back.git/internal/store/cache"
 	"github.com/Har2yQn78/social_back.git/internal/ratelimiter"
 	"github.com/Har2yQn78/social_back.git/internal/mailer"
+	"github.com/go-chi/cors"
 )
 
 type application struct {
@@ -62,6 +63,15 @@ type tokenConfig struct {
 
 func (app *application) mount() *chi.Mux {
 	r := chi.NewRouter()
+	
+	r.Use(cors.Handler(cors.Options{
+			AllowedOrigins:   []string{"https://*", "http://*"},
+			AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
+			AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+			ExposedHeaders:   []string{"Link"},
+			AllowCredentials: true,
+			MaxAge:           300, 
+		}))
 	
 	r.Use(app.RateLimiterMiddleware)
 
