@@ -1,6 +1,6 @@
-import { ReactNode } from 'react'
-import { FieldErrors, UseFormReturn } from 'react-hook-form'
-import { cn } from '../../lib/cn'
+import type { ReactNode } from 'react';
+import type { FieldErrors, FieldError, UseFormReturn } from 'react-hook-form';
+import { cn } from '../../lib/cn';
 
 export function Form({
   children,
@@ -11,7 +11,7 @@ export function Form({
     <form className={cn('space-y-4', className)} {...props}>
       {children}
     </form>
-  )
+  );
 }
 
 export function Field({
@@ -19,13 +19,13 @@ export function Field({
   htmlFor,
   error,
   help,
-  children
+  children,
 }: {
-  label?: string
-  htmlFor?: string
-  error?: string
-  help?: string | ReactNode
-  children: ReactNode
+  label?: string;
+  htmlFor?: string;
+  error?: string;
+  help?: string | ReactNode;
+  children: ReactNode;
 }) {
   return (
     <div className="space-y-1.5">
@@ -41,15 +41,14 @@ export function Field({
         <p className="text-sm text-neutral-500">{help}</p>
       ) : null}
     </div>
-  )
+  );
 }
 
 export function getError<T extends Record<string, unknown>>(
   errors: FieldErrors<T>,
   name: keyof T
-) {
-  const err = errors[name]
-  if (!err) return undefined
-  const msg = (err as any)?.message
-  return typeof msg === 'string' ? msg : 'Invalid value'
+): string | undefined {
+  const err = errors[name] as FieldError | undefined;
+  if (!err) return undefined;
+  return typeof err.message === 'string' ? err.message : 'Invalid value';
 }

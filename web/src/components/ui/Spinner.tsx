@@ -1,4 +1,4 @@
-import { HTMLAttributes } from 'react'
+import type { HTMLAttributes } from 'react'
 import { cn } from '../../lib/cn'
 
 export function Spinner({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
