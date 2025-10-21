@@ -43,13 +43,22 @@ export default function AppLayout({ children }: Props) {
             </div>
 
             <nav className="hidden md:flex items-center gap-1">
-              <NavLink to="/feed" className={({ isActive }) => `${navClasses} ${isActive ? active : ''}`}>
+              <NavLink
+                to="/feed"
+                className={({ isActive }) => `${navClasses} ${isActive ? active : ''}`}
+              >
                 Feed
               </NavLink>
-              <NavLink to="/post/create" className={({ isActive }) => `${navClasses} ${isActive ? active : ''}`}>
+              <NavLink
+                to="/post/create"
+                className={({ isActive }) => `${navClasses} ${isActive ? active : ''}`}
+              >
                 Create
               </NavLink>
-              <NavLink to="/settings" className={({ isActive }) => `${navClasses} ${isActive ? active : ''}`}>
+              <NavLink
+                to="/settings"
+                className={({ isActive }) => `${navClasses} ${isActive ? active : ''}`}
+              >
                 Settings
               </NavLink>
             </nav>
@@ -68,7 +77,9 @@ export default function AppLayout({ children }: Props) {
                     to="/login"
                     className={({ isActive }) =>
                       `rounded-xl px-3 py-2 text-sm font-medium transition-colors ${
-                        isActive ? 'bg-neutral-200 text-neutral-900' : 'text-neutral-700 hover:text-neutral-900'
+                        isActive
+                          ? 'bg-neutral-200 text-neutral-900'
+                          : 'text-neutral-700 hover:text-neutral-900'
                       }`
                     }
                   >
@@ -121,21 +132,41 @@ export default function AppLayout({ children }: Props) {
           {open && (
             <div className="md:hidden pb-3">
               <div className="flex flex-col gap-1">
-                <NavLink to="/feed" onClick={() => setOpen(false)} className={({ isActive }) => `${navClasses} ${isActive ? active : ''}`}>
+                <NavLink
+                  to="/feed"
+                  onClick={() => setOpen(false)}
+                  className={({ isActive }) => `${navClasses} ${isActive ? active : ''}`}
+                >
                   Feed
                 </NavLink>
-                <NavLink to="/post/create" onClick={() => setOpen(false)} className={({ isActive }) => `${navClasses} ${isActive ? active : ''}`}>
+                <NavLink
+                  to="/post/create"
+                  onClick={() => setOpen(false)}
+                  className={({ isActive }) => `${navClasses} ${isActive ? active : ''}`}
+                >
                   Create
                 </NavLink>
-                <NavLink to="/settings" onClick={() => setOpen(false)} className={({ isActive }) => `${navClasses} ${isActive ? active : ''}`}>
+                <NavLink
+                  to="/settings"
+                  onClick={() => setOpen(false)}
+                  className={({ isActive }) => `${navClasses} ${isActive ? active : ''}`}
+                >
                   Settings
                 </NavLink>
                 {!auth.token ? (
                   <>
-                    <NavLink to="/login" onClick={() => setOpen(false)} className={({ isActive }) => `${navClasses} ${isActive ? active : ''}`}>
+                    <NavLink
+                      to="/login"
+                      onClick={() => setOpen(false)}
+                      className={({ isActive }) => `${navClasses} ${isActive ? active : ''}`}
+                    >
                       Login
                     </NavLink>
-                    <NavLink to="/register" onClick={() => setOpen(false)} className={({ isActive }) => `${navClasses} ${isActive ? active : ''}`}>
+                    <NavLink
+                      to="/register"
+                      onClick={() => setOpen(false)}
+                      className={({ isActive }) => `${navClasses} ${isActive ? active : ''}`}
+                    >
                       Sign up
                     </NavLink>
                   </>
@@ -160,7 +191,7 @@ export default function AppLayout({ children }: Props) {
 
       <footer className="border-t border-neutral-200">
         <div className="mx-auto max-w-6xl px-4 py-6 text-sm text-neutral-500">
-          © {new Date().getFullYear()} GoSocial
+          © {new Date().getFullYear()} Created by Harry
         </div>
       </footer>
     </div>
